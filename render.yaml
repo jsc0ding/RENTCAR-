@@ -4,9 +4,8 @@ services:
     runtime: node
     region: frankfurt
     plan: free
-    buildCommand: npm ci && npm run build && cd server && npm ci
+    buildCommand: npm install && npm run build && cd server && npm install
     startCommand: npm start
-    healthCheckPath: /api/cars
     envVars:
       - key: NODE_ENV
         value: production
