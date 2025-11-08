@@ -457,12 +457,22 @@ ${message}
 
 // Production'da static files serve qilish
 if (isProduction) {
+  const distPath = path.join(__dirname, '../dist');
+  console.log('📁 Serving static files from:', distPath);
+  
   // Serve static files from React build
-  app.use(express.static(path.join(__dirname, '../dist')));
+  app.use(express.static(distPath));
 
-  // Handle React routing, return all requests to React app
+  // Handle React routing, return all requests to React app (faqat API bo'lmagan requestlar uchun)
   app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../dist', 'index.html'));
+    // API requestlarni skip qilish
+    if (req.path.startsWith('/api')) {
+      return res.status(404).json({ error: 'API endpoint not found' });
+    }
+    
+    const indexPath = path.join(distPath, 'index.html');
+    console.log('📄 Serving index.html from:', indexPath);
+    res.sendFile(indexPath);
   });
 }
 
