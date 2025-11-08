@@ -1,0 +1,5 @@
+NODE_ENV=production
+PORT=10000
+MONGODB_URI=mongodb+srv://Nizomjon:lr7KznYbG7UJrfrU@cluster1.mun3jsp.mongodb.net/carRental?retryWrites=true&w=majority
+TELEGRAM_BOT_TOKEN=8497545620:AAF8nnCD23faZOlE_LVOsxw2rX1DKPxxiBA
+TELEGRAM_CHAT_ID=7240818738

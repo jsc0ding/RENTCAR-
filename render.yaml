@@ -1,11 +1,12 @@
 services:
   - type: web
     name: luxrent-app
-    env: node
+    runtime: node
     region: frankfurt
     plan: free
-    buildCommand: npm install && npm run build && cd server && npm install
+    buildCommand: npm ci && npm run build && cd server && npm ci
     startCommand: npm start
+    healthCheckPath: /api/cars
     envVars:
       - key: NODE_ENV
         value: production
