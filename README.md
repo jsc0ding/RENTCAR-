@@ -1,118 +1,197 @@
-# LuxRent - Car Leasing Platform
+# 🚗 Car Rental - Avtomobil Ijarasi Tizimi
 
-## Project Overview
+To'liq funksional avtomobil ijarasi veb-ilovasi. Frontend va Backend alohida papkalarda joylashgan.
 
-LuxRent is a premium car leasing platform built with modern web technologies. The application allows users to browse, search, and rent luxury vehicles with a seamless user experience.
+## 📁 Loyiha Strukturasi
 
-## How to Run the Project
+```
+car-rental/
+├── backend/           # Express + MongoDB
+├── frontend/          # React + Vite + TypeScript
+└── package.json       # Root package.json
+```
 
-To run the project locally, you need to start both the backend server and frontend development server:
+## 🚀 Tezkor Boshlash
 
-### Prerequisites
-- Node.js & npm installed
-- MongoDB connection (configured in the backend)
+### 1. Barcha dependencies ni o'rnatish
 
-### Starting the Application
+```bash
+npm run install:all
+```
 
-1. **Start the backend server:**
-```sh
-cd server
+### 2. Loyihani ishga tushirish
+
+Bitta komanda bilan backend va frontend ni ishga tushirish:
+
+```bash
+npm run dev
+```
+
+Yoki alohida ishga tushirish:
+
+**Backend:**
+```bash
+npm run dev:backend
+```
+
+**Frontend:**
+```bash
+npm run dev:frontend
+```
+
+- Backend: `http://localhost:5000`
+- Frontend: `http://localhost:8080` (yoki 5173)
+
+## 🔧 Sozlash
+
+### Frontend (.env)
+
+`frontend/.env` faylini yarating:
+
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+### Backend (.env)
+
+`backend/.env` faylini yarating:
+
+```env
+PORT=5000
+MONGODB_URI=your_mongodb_connection_string
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token
+TELEGRAM_CHAT_ID=your_telegram_chat_id
+NODE_ENV=development
+```
+
+## ✨ Xususiyatlar
+
+### Frontend
+- 📱 To'liq responsive dizayn (mobile, tablet, desktop)
+- 🔐 Admin panel (logo 3 marta bosish + parol: 87654321)
+- 🚗 Avtomobil katalogi va filtrlash
+- 📅 Bron qilish tizimi (Uzbek kalendar)
+- 🗺️ 14 ta viloyat bo'yicha joylashuv
+- 📞 Aloqa formasi
+- 🌙 Dark/Light mode
+- 🎨 Zamonaviy UI (Shadcn/ui)
+
+### Backend
+- 🔌 RESTful API
+- 💾 MongoDB database
+- 📱 Telegram bot integratsiyasi
+- 🔍 Qidiruv va filtrlash
+- 📊 Statistika
+- 🔄 CRUD operatsiyalari
+
+## 📱 Telegram Bot
+
+Backend avtomatik ravishda Telegram bot orqali xabarlar yuboradi:
+- Yangi bron qilingan avtomobillar haqida
+- Aloqa formasi orqali yuborilgan xabarlar
+
+## 🛠️ Texnologiyalar
+
+### Frontend
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS
+- Shadcn/ui
+- React Router
+- React Query
+- Axios
+
+### Backend
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- Telegram Bot API
+- CORS
+
+## 📖 Qo'shimcha Ma'lumot
+
+Har bir qism uchun batafsil ma'lumot:
+- [Frontend README](./frontend/README.md)
+- [Backend README](./backend/README.md)
+
+## 🔐 Admin Panel
+
+Admin panelga kirish:
+1. Asosiy sahifada logoni 3 marta bosing
+2. Parol kiriting: `87654321`
+3. Admin panelda avtomobillarni boshqaring
+
+## 📝 Scriptlar
+
+### Development
+
+```bash
+# Barcha dependencies ni o'rnatish
+npm install
+
+# Backend va Frontend ni bir vaqtda ishga tushirish (Development)
+npm run dev
+
+# Faqat Backend (Development)
+npm run dev:backend
+
+# Faqat Frontend (Development)
+npm run dev:frontend
+```
+
+### Production
+
+```bash
+# Frontend ni build qilish
+npm run build
+
+# Backend orqali frontend ni serve qilish (Production)
+npm start
+
+# Yoki alohida:
+npm run build          # Frontend build
+npm run start:backend  # Backend ishga tushirish
+```
+
+## 🏗️ Production Build va Deploy
+
+### 1. Frontend Build
+
+```bash
+npm run build
+```
+
+Bu komanda `frontend/dist` papkasida tayyor fayllar yaratadi:
+- `index.html` - Asosiy HTML fayl
+- `assets/` - CSS va JavaScript fayllar
+- Static fayllar (favicon, images, robots.txt)
+
+### 2. Backend orqali Frontend Serve Qilish
+
+```bash
 npm start
 ```
 
-2. **In a new terminal, start the frontend development server:**
-```sh
-npm run dev
+Bu komanda:
+1. Frontend ni build qiladi
+2. Backend serverni ishga tushiradi
+3. Backend `http://localhost:5000` da frontend va API ni serve qiladi
+
+**Natija:**
+- Frontend: `http://localhost:5000`
+- API: `http://localhost:5000/api`
+
+### 3. Preview (Ixtiyoriy)
+
+Build qilingan fayllarni alohida preview qilish:
+
+```bash
+cd frontend
+npm run preview
 ```
 
-3. **Access the application:**
-- Frontend: http://localhost:8080
-- Backend API: http://localhost:5000/api
-- Admin Panel: http://localhost:8080/admin
+## 📝 Litsenziya
 
-## Project Structure
-
-**Frontend** (Root directory)
-- Built with: Vite, TypeScript, React, shadcn-ui, Tailwind CSS
-- Pages: Home, Cars Listing, About, Contact, Admin Panel
-
-**Backend** (server directory)
-- Built with: Node.js, Express.js, MongoDB with Mongoose
-- RESTful API for car management, bookings, and statistics
-
-## Key Features
-
-- Browse and search luxury cars by various filters (brand, category, price, passengers, etc.)
-- Book cars with a simple booking system
-- Admin panel for managing cars, bookings, and system statistics
-- Responsive design that works on all devices
-- Brand-specific car images for better visual experience
-- Real-time availability status updates
-
-## Technologies Used
-
-- **Frontend**: React, TypeScript, Vite, Tailwind CSS, shadcn-ui
-- **Backend**: Node.js, Express.js, MongoDB, Mongoose
-- **API Communication**: Axios
-- **State Management**: React Query
-- **UI Components**: Radix UI, Lucide React Icons
-- **Form Handling**: React Hook Form
-- **Notifications**: Sonner
-
-## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/fd4652cc-0625-4ca0-b5a3-c4afd78d38c2) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/fd4652cc-0625-4ca0-b5a3-c4afd78d38c2) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+MIT License
