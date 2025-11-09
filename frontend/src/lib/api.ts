@@ -1,42 +1,42 @@
 import axios from 'axios';
 
 // Environment variable dan API URL olish
-// Production da relative URL, Development da localhost
-// Render.com da backend va frontend bir xil serverda, shuning uchun relative URL ishlatiladi
+// Backend va Frontend alohida deploy qilinganda VITE_API_URL ishlatiladi
 const getApiBaseUrl = () => {
-  // 1. Agar VITE_API_URL sozlangan bo'lsa, uni ishlatish (eng ustuvor)
+  // 1. VITE_API_URL sozlangan bo'lsa, uni ishlatish (eng ustuvor)
+  // Bu backend va frontend alohida deploy qilinganda kerak
   if (import.meta.env.VITE_API_URL) {
     return import.meta.env.VITE_API_URL;
   }
   
   // 2. Development mode ni tekshirish
-  // Vite da import.meta.env.DEV va import.meta.env.PROD mavjud
-  // import.meta.env.MODE === 'development' yoki 'production'
   const isDevelopment = import.meta.env.DEV || import.meta.env.MODE === 'development';
   const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production';
   
-  // 3. Runtime da window.location dan tekshirish (production uchun)
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    // Localhost yoki 127.0.0.1 bo'lsa, development
-    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '') {
-      return 'http://localhost:5000/api';
-    }
-    // Boshqa hollarda (production, Render.com, va h.k.) relative URL
-    return '/api';
-  }
-  
-  // 4. SSR yoki build vaqtida: environment dan aniqlash
-  if (isProduction) {
-    return '/api';
-  }
-  
+  // 3. Development da localhost
   if (isDevelopment) {
     return 'http://localhost:5000/api';
   }
   
-  // 5. Default: relative URL (production uchun)
-  return '/api';
+  // 4. Production da:
+  // - Agar backend va frontend bir xil serverda bo'lsa: relative URL
+  // - Agar alohida bo'lsa: VITE_API_URL sozlash kerak
+  if (isProduction) {
+    // Runtime da window.location dan tekshirish
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      // Localhost bo'lsa, development
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return 'http://localhost:5000/api';
+      }
+    }
+    // Production da default: relative URL (bir xil server uchun)
+    // Yoki VITE_API_URL sozlash kerak (alohida server uchun)
+    return '/api';
+  }
+  
+  // 5. Default: localhost (development)
+  return 'http://localhost:5000/api';
 };
 
 const API_BASE_URL = getApiBaseUrl();

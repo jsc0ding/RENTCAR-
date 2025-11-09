@@ -18,11 +18,44 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+// CORS sozlamalari - frontend URL dan ruxsat berish
+const FRONTEND_URL = process.env.FRONTEND_URL || '*'; // Default: barcha domain'lardan
+const allowedOrigins = FRONTEND_URL === '*' 
+  ? '*' 
+  : FRONTEND_URL.split(',').map(url => url.trim());
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Agar FRONTEND_URL '*' bo'lsa yoki origin yo'q bo'lsa (Postman, va h.k.), ruxsat berish
+    if (FRONTEND_URL === '*' || !origin) {
+      return callback(null, true);
+    }
+    
+    // Agar allowedOrigins array bo'lsa, tekshirish
+    if (Array.isArray(allowedOrigins) && allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Agar allowedOrigins '*' bo'lsa, ruxsat berish
+    if (allowedOrigins === '*') {
+      return callback(null, true);
+    }
+    
+    callback(new Error('CORS policy: Not allowed by origin'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
+// Preflight request'larni handle qilish
+app.options('*', cors());
+
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/carRental';
+const MONGODB_URI = process.env.MONGODB_URI
 
 // MongoDB connection state
 let isMongoConnected = false;
@@ -66,7 +99,7 @@ const checkMongoConnection = (req, res, next) => {
 
 // Connect to MongoDB without deprecated options
 // Agar ulanmasa ham server ishga tushishi kerak
-if (MONGODB_URI && MONGODB_URI !== 'mongodb://localhost:27017/carRental') {
+if (MONGODB_URI && MONGODB_URI ) {
   mongoose.connect(MONGODB_URI, {
     serverSelectionTimeoutMS: 5000, // 5 soniya timeout
     socketTimeoutMS: 45000,
@@ -542,7 +575,7 @@ app.listen(PORT, HOST, () => {
   console.log(`🚀 Server ${HOST}:${PORT} da ishlamoqda`);
   console.log(`🔗 API: http://${HOST}:${PORT}/api`);
   console.log(`📦 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`📁 Frontend: ${frontendDistPath}`);
+  console.log(`🌐 Frontend URL: ${FRONTEND_URL}`);
   console.log(`🗄️  MongoDB: ${isMongoConnected ? '✅ Ulangan' : '❌ Ulanmagan'}`);
   
   if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
@@ -553,5 +586,12 @@ app.listen(PORT, HOST, () => {
   
   if (!isMongoConnected && mongoose.connection.readyState !== 1) {
     console.log('⚠️  MongoDB ulanmagan. API endpointlar ishlamaydi. MONGODB_URI ni tekshiring.');
+  }
+  
+  // Frontend dist mavjudligini tekshirish (alohida deploy qilinganda kerak emas)
+  if (existsSync(frontendDistPath)) {
+    console.log(`📁 Frontend static files: ${frontendDistPath} (alohida deploy qilinganda kerak emas)`);
+  } else {
+    console.log(`📁 Frontend alohida deploy qilingan (static files yo'q)`);
   }
 });
