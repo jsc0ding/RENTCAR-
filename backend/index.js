@@ -532,12 +532,47 @@ ${message}
   }
 });
 
+// Asosiy route - API haqida ma'lumot
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Car Rental Backend API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      cars: '/api/cars',
+      stats: '/api/stats',
+      filters: '/api/filters',
+      contact: '/api/contact'
+    },
+    documentation: 'Backend API ishlayapti. Frontend alohida deploy qilingan.'
+  });
+});
+
 // API yo'llari uchun 404 handler
 app.use('/api/*', (req, res) => {
   res.status(404).json({ 
     success: false,
     message: 'API endpoint topilmadi',
-    path: req.path
+    path: req.path,
+    availableEndpoints: [
+      '/api/health',
+      '/api/cars',
+      '/api/cars/:id',
+      '/api/stats',
+      '/api/filters',
+      '/api/contact'
+    ]
+  });
+});
+
+// Barcha boshqa yo'llar uchun 404
+app.use('*', (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'Route topilmadi',
+    path: req.path,
+    info: 'Bu backend API server. Frontend alohida deploy qilingan.'
   });
 });
 
