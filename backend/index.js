@@ -3,13 +3,6 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import axios from 'axios';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { existsSync } from 'fs';
-
-// ES Module uchun __dirname
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 // Load environment variables
 dotenv.config();
@@ -531,40 +524,12 @@ ${message}
   }
 });
 
-// Static fayllarni ko'rsatish (Production uchun)
-const frontendDistPath = path.join(__dirname, '../frontend/dist');
-
-if (existsSync(frontendDistPath)) {
-  app.use(express.static(frontendDistPath));
-  console.log(`✅ Frontend static files: ${frontendDistPath}`);
-} else {
-  console.log(`⚠️  Frontend dist folder topilmadi: ${frontendDistPath}`);
-  console.log(`⚠️  Frontend ni build qiling: npm run build`);
-}
-
-// Barcha yo'llar uchun React sahifasini qaytarish (faqat API bo'lmagan requestlar uchun)
-app.get('*', (req, res) => {
-  // API requestlarni skip qilish
-  if (req.path.startsWith('/api')) {
-    return res.status(404).json({ 
-      success: false,
-      message: 'API endpoint topilmadi' 
-    });
-  }
-  
-  // Agar frontend dist mavjud bo'lsa, index.html ni qaytarish
-  if (existsSync(frontendDistPath)) {
-    const indexPath = path.join(frontendDistPath, 'index.html');
-    if (existsSync(indexPath)) {
-      return res.sendFile(indexPath);
-    }
-  }
-  
-  // Agar frontend dist mavjud bo'lmasa, xabarni qaytarish
-  res.status(503).json({
+// API yo'llari uchun 404 handler
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ 
     success: false,
-    message: 'Frontend build qilinmagan. Iltimos, frontend ni build qiling.',
-    error: 'Frontend dist folder not found'
+    message: 'API endpoint topilmadi',
+    path: req.path
   });
 });
 
