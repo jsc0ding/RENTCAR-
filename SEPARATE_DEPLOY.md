@@ -266,3 +266,4 @@ Endi backend va frontend alohida deploy qilingan va ishlayapti!
 - [Render.com Docs](https://render.com/docs)
 - [Vite Environment Variables](https://vitejs.dev/guide/env-and-mode.html)
 
+
