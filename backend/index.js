@@ -48,7 +48,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // MongoDB connection
-const MONGODB_URI = process.env.MONGODB_URI
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/carRental';
 
 // MongoDB connection state
 let isMongoConnected = false;
@@ -90,23 +90,31 @@ const checkMongoConnection = (req, res, next) => {
   next();
 };
 
-// Connect to MongoDB without deprecated options
+// Connect to MongoDB
 // Agar ulanmasa ham server ishga tushishi kerak
-if (MONGODB_URI && MONGODB_URI ) {
+if (MONGODB_URI && MONGODB_URI !== 'mongodb://localhost:27017/carRental') {
+  console.log('🔄 MongoDB ga ulanish boshlandi...');
   mongoose.connect(MONGODB_URI, {
-    serverSelectionTimeoutMS: 5000, // 5 soniya timeout
+    serverSelectionTimeoutMS: 10000, // 10 soniya timeout
     socketTimeoutMS: 45000,
+    connectTimeoutMS: 10000,
   }).then(() => {
     console.log('✅ MongoDB ga muvaffaqiyatli ulandi');
     isMongoConnected = true;
   }).catch(err => {
     console.error('❌ MongoDB ga ulanishda xatolik:', err.message);
+    console.error('❌ Xatolik tafsilotlari:', {
+      name: err.name,
+      code: err.code,
+      message: err.message
+    });
     console.log('⚠️ Server MongoDB ulanmasdan ishlayapti. API endpointlar ishlamaydi.');
     isMongoConnected = false;
     // Server ni to'xtatmaslik
   });
 } else {
-  console.log('⚠️ MONGODB_URI sozlanmagan. Server MongoDB ulanmasdan ishlayapti.');
+  console.log('⚠️ MONGODB_URI sozlanmagan yoki default qiymat. Server MongoDB ulanmasdan ishlayapti.');
+  console.log('⚠️ Environment variable ni tekshiring: MONGODB_URI');
 }
 
 // Telegram Bot Configuration
@@ -553,10 +561,5 @@ app.listen(PORT, HOST, () => {
     console.log('⚠️  MongoDB ulanmagan. API endpointlar ishlamaydi. MONGODB_URI ni tekshiring.');
   }
   
-  // Frontend dist mavjudligini tekshirish (alohida deploy qilinganda kerak emas)
-  if (existsSync(frontendDistPath)) {
-    console.log(`📁 Frontend static files: ${frontendDistPath} (alohida deploy qilinganda kerak emas)`);
-  } else {
-    console.log(`📁 Frontend alohida deploy qilingan (static files yo'q)`);
-  }
+  console.log('📁 Backend faqat API serve qiladi - frontend alohida deploy qilingan');
 });
