@@ -9,6 +9,7 @@ import PhoneInput9Digits from "@/components/PhoneInput9Digits";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { contactApi } from "@/lib/api";
 
 const Contact = () => {
   const [showMap, setShowMap] = useState(false);
@@ -73,17 +74,9 @@ const Contact = () => {
     try {
       setLoading(true);
       
-      const response = await fetch('http://localhost:5000/api/contact', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await contactApi.send(formData);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (response.success) {
         toast.success("Xabaringiz muvaffaqiyatli yuborildi! Tez orada siz bilan bog'lanamiz.", {
           position: "top-center",
           duration: 4000,
@@ -97,14 +90,15 @@ const Contact = () => {
           message: ""
         });
       } else {
-        toast.error(data.message || "Xabar yuborishda xatolik", {
+        toast.error(response.message || "Xabar yuborishda xatolik", {
           position: "top-center",
           duration: 3000,
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Xabar yuborishda xatolik:', error);
-      toast.error("Xabar yuborishda xatolik yuz berdi", {
+      const errorMessage = error.response?.data?.message || error.message || "Xabar yuborishda xatolik yuz berdi";
+      toast.error(errorMessage, {
         position: "top-center",
         duration: 3000,
       });
