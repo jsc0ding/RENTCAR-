@@ -5,12 +5,12 @@
 ### 1. Build Command
 
 ```bash
-npm install; npm run build
+npm run build
 ```
 
 Bu komanda:
-1. Root dependencies ni o'rnatadi
-2. Frontend ni build qiladi (dependencies bilan birga)
+1. Frontend dependencies ni o'rnatadi (`npm install --prefix frontend`)
+2. Frontend ni build qiladi (`npm run build --prefix frontend`)
 
 ### 2. Start Command
 
@@ -19,8 +19,8 @@ npm start
 ```
 
 Bu komanda:
-1. Backend dependencies ni o'rnatadi
-2. Backend serverni ishga tushiradi
+1. Backend dependencies ni o'rnatadi (`npm install --prefix backend`)
+2. Backend serverni ishga tushiradi (`npm start --prefix backend`)
 3. Frontend static files ni serve qiladi
 
 ### 3. Environment Variables
@@ -56,7 +56,7 @@ Region: Frankfurt (yoki yaqin)
 Branch: main
 Root Directory: (bo'sh qoldiring)
 
-Build Command: npm install; npm run build
+Build Command: npm run build
 Start Command: npm start
 
 Instance Type: Free
