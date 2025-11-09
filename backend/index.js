@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import axios from 'axios';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { existsSync } from 'fs';
 
 // ES Module uchun __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -23,31 +24,64 @@ app.use(express.json());
 // MongoDB connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/carRental';
 
+// MongoDB connection state
+let isMongoConnected = false;
+
 mongoose.connection.on('connected', () => {
   console.log('✅ MongoDB ga ulandi');
+  isMongoConnected = true;
 });
 
 mongoose.connection.on('error', (err) => {
   console.error('❌ MongoDB xatoligi:', err);
-  process.exit(1);
+  isMongoConnected = false;
+  // Server ni to'xtatmaslik, faqat xabarni ko'rsatish
 });
 
 mongoose.connection.on('disconnected', () => {
   console.log('⚠️ MongoDB uzildi');
+  isMongoConnected = false;
 });
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  await mongoose.connection.close();
-  console.log('.MongoDB uzildi');
+  if (mongoose.connection.readyState === 1) {
+    await mongoose.connection.close();
+    console.log('MongoDB uzildi');
+  }
   process.exit(0);
 });
 
+// MongoDB ulanishini tekshirish funksiyasi
+const checkMongoConnection = (req, res, next) => {
+  if (!isMongoConnected && mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      success: false,
+      message: 'Database ulanmagan. Iltimos, keyinroq urinib ko\'ring.',
+      error: 'MongoDB connection not established'
+    });
+  }
+  next();
+};
+
 // Connect to MongoDB without deprecated options
-mongoose.connect(MONGODB_URI).catch(err => {
-  console.error('❌ MongoDB ga ulanishda xatolik:', err);
-  process.exit(1);
-});
+// Agar ulanmasa ham server ishga tushishi kerak
+if (MONGODB_URI && MONGODB_URI !== 'mongodb://localhost:27017/carRental') {
+  mongoose.connect(MONGODB_URI, {
+    serverSelectionTimeoutMS: 5000, // 5 soniya timeout
+    socketTimeoutMS: 45000,
+  }).then(() => {
+    console.log('✅ MongoDB ga muvaffaqiyatli ulandi');
+    isMongoConnected = true;
+  }).catch(err => {
+    console.error('❌ MongoDB ga ulanishda xatolik:', err.message);
+    console.log('⚠️ Server MongoDB ulanmasdan ishlayapti. API endpointlar ishlamaydi.');
+    isMongoConnected = false;
+    // Server ni to'xtatmaslik
+  });
+} else {
+  console.log('⚠️ MONGODB_URI sozlanmagan. Server MongoDB ulanmasdan ishlayapti.');
+}
 
 // Telegram Bot Configuration
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -98,8 +132,18 @@ const Car = mongoose.model('Car', carSchema);
 
 // Routes
 
+// Health check endpoint (MongoDB ulanmasa ham ishlaydi)
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Server ishlayapti',
+    mongoConnected: isMongoConnected || mongoose.connection.readyState === 1,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Get all cars
-app.get('/api/cars', async (req, res) => {
+app.get('/api/cars', checkMongoConnection, async (req, res) => {
   try {
     const { category, brand, minPrice, maxPrice, available, minPassengers, search } = req.query;
     
@@ -163,7 +207,7 @@ app.get('/api/cars', async (req, res) => {
 });
 
 // Get single car
-app.get('/api/cars/:id', async (req, res) => {
+app.get('/api/cars/:id', checkMongoConnection, async (req, res) => {
   try {
     const car = await Car.findById(req.params.id);
     if (!car) {
@@ -186,7 +230,7 @@ app.get('/api/cars/:id', async (req, res) => {
 });
 
 // Create new car
-app.post('/api/cars', async (req, res) => {
+app.post('/api/cars', checkMongoConnection, async (req, res) => {
   try {
     const car = new Car(req.body);
     await car.save();
@@ -205,7 +249,7 @@ app.post('/api/cars', async (req, res) => {
 });
 
 // Update car
-app.put('/api/cars/:id', async (req, res) => {
+app.put('/api/cars/:id', checkMongoConnection, async (req, res) => {
   try {
     console.log('Car update request received for ID:', req.params.id);
     console.log('Request body:', req.body);
@@ -286,7 +330,7 @@ app.put('/api/cars/:id', async (req, res) => {
 });
 
 // Delete car
-app.delete('/api/cars/:id', async (req, res) => {
+app.delete('/api/cars/:id', checkMongoConnection, async (req, res) => {
   try {
     const car = await Car.findByIdAndDelete(req.params.id);
     if (!car) {
@@ -309,7 +353,7 @@ app.delete('/api/cars/:id', async (req, res) => {
 });
 
 // Get statistics
-app.get('/api/stats', async (req, res) => {
+app.get('/api/stats', checkMongoConnection, async (req, res) => {
   try {
     const totalCars = await Car.countDocuments();
     const availableCars = await Car.countDocuments({ available: true });
@@ -350,7 +394,7 @@ app.get('/api/stats', async (req, res) => {
 });
 
 // Get categories and brands for filters
-app.get('/api/filters', async (req, res) => {
+app.get('/api/filters', checkMongoConnection, async (req, res) => {
   try {
     const categories = await Car.distinct('category');
     const brands = await Car.distinct('brand');
@@ -374,7 +418,7 @@ app.get('/api/filters', async (req, res) => {
 });
 
 // Reset all cars to available (Admin only)
-app.post('/api/cars/reset-all', async (req, res) => {
+app.post('/api/cars/reset-all', checkMongoConnection, async (req, res) => {
   try {
     console.log('🔄 Barcha avtomobillarni qaytarish...');
     
@@ -456,7 +500,14 @@ ${message}
 
 // Static fayllarni ko'rsatish (Production uchun)
 const frontendDistPath = path.join(__dirname, '../frontend/dist');
-app.use(express.static(frontendDistPath));
+
+if (existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+  console.log(`✅ Frontend static files: ${frontendDistPath}`);
+} else {
+  console.log(`⚠️  Frontend dist folder topilmadi: ${frontendDistPath}`);
+  console.log(`⚠️  Frontend ni build qiling: npm run build`);
+}
 
 // Barcha yo'llar uchun React sahifasini qaytarish (faqat API bo'lmagan requestlar uchun)
 app.get('*', (req, res) => {
@@ -468,18 +519,39 @@ app.get('*', (req, res) => {
     });
   }
   
-  res.sendFile(path.join(frontendDistPath, 'index.html'));
+  // Agar frontend dist mavjud bo'lsa, index.html ni qaytarish
+  if (existsSync(frontendDistPath)) {
+    const indexPath = path.join(frontendDistPath, 'index.html');
+    if (existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
+  }
+  
+  // Agar frontend dist mavjud bo'lmasa, xabarni qaytarish
+  res.status(503).json({
+    success: false,
+    message: 'Frontend build qilinmagan. Iltimos, frontend ni build qiling.',
+    error: 'Frontend dist folder not found'
+  });
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server http://localhost:${PORT} da ishlamoqda`);
-  console.log(`🔗 API: http://localhost:${PORT}/api`);
+// Render.com uchun 0.0.0.0 ga listen qilish
+const HOST = process.env.HOST || '0.0.0.0';
+
+app.listen(PORT, HOST, () => {
+  console.log(`🚀 Server ${HOST}:${PORT} da ishlamoqda`);
+  console.log(`🔗 API: http://${HOST}:${PORT}/api`);
   console.log(`📦 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`📁 Frontend: ${frontendDistPath}`);
+  console.log(`🗄️  MongoDB: ${isMongoConnected ? '✅ Ulangan' : '❌ Ulanmagan'}`);
   
   if (TELEGRAM_BOT_TOKEN && TELEGRAM_CHAT_ID) {
     console.log('✅ Telegram bot sozlangan');
   } else {
     console.log('⚠️  Telegram bot sozlanmagan. .env faylida TELEGRAM_BOT_TOKEN va TELEGRAM_CHAT_ID ni qo\'ying');
+  }
+  
+  if (!isMongoConnected && mongoose.connection.readyState !== 1) {
+    console.log('⚠️  MongoDB ulanmagan. API endpointlar ishlamaydi. MONGODB_URI ni tekshiring.');
   }
 });
